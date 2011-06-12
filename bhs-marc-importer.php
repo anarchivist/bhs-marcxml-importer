@@ -137,7 +137,7 @@ if ( class_exists( 'WP_Importer' ) ) {
       if (!empty($bioghist) && (count($scopeabs > 1))) {
         $out .= '<p>'. $bioghist[0]. "</p>\n";
       }
-      $names = $r->getFields('.(0|1)0', true);
+      $names = $r->getFields('(1|6|7)(0|1)0', true);
       if (!empty($names)) {
         $out .= "<p><strong>Names:</strong></p>\n";
         foreach ($names as $name) {
