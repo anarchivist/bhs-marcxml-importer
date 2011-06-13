@@ -11,6 +11,7 @@ License: GPL v2 - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 */
 
 require_once('File/MARCXML.php');
+require_once('class.marcxml-parser.php');
 
 /**
  * BHS MARCXML Importer
@@ -29,50 +30,6 @@ if ( !class_exists( 'WP_Importer' ) ) {
 	$class_wp_importer = ABSPATH . 'wp-admin/includes/class-wp-importer.php';
 	if ( file_exists( $class_wp_importer ) )
 		require_once $class_wp_importer;
-}
-
-/**
-  * Retrieve an array of formatted fields from a File_MARC_Record object,
-  * specified by tag
-  *
-  * @param File_MARC_Record $record
-  *   record
-  * @param string $tag
-  *   MARC tag to retrieve
-  * @param bool $pcre
-  *   if true, then match as a regular expression
-  * @return array
-  */
-function field_get($record = NULL, $tag = NULL, $pcre = FALSE) {
-  $out = array();
-  if (!empty($record)) {
-    $fieldset = $record->getFields($tag, $pcre);
-    foreach ($fieldset as $field) {
-      $out[] = $field->formatField();
-    }
-  }
-  return $out;
-}
-
-/**
-  * Retrieve the first matching fields from a File_MARC_Record object,
-  * specified by tag, and return a formatted string.
-  *
-  * @param File_MARC_Record $record
-  *   record
-  * @param string $tag
-  *   MARC tag to retrieve
-  * @param bool $pcre
-  *   if true, then match as a regular expression
-  * @return string
-  */
-function field_get_first($record = NULL, $tag = NULL, $pcre = FALSE) {
-  $r = field_get($record, $tag, $pcre);
-  if (!empty($r)) {
-    return $r[0];
-  } else {
-    return "";
-  }
 }
 
 if ( class_exists( 'WP_Importer' ) ) {
@@ -126,81 +83,14 @@ if ( class_exists( 'WP_Importer' ) ) {
       echo '</form>';
     }
     
-    function make_content($r) {
-      $out = '<p><strong>Call Number: '. field_get_first($r, '099') ."</strong></p>\n";
-      $out .= '<p><strong>Extent: '.field_get_first($r, '300')."</strong></p>\n";
-      $scopeabs = field_get($r, '520');
-      if (!empty($scopeabs)) {
-        $out .= '<p>'. $scopeabs[0]. "</p>\n";
-      }
-      $bioghist = field_get($r, '545');
-      if (!empty($bioghist) && (count($scopeabs > 1))) {
-        $out .= '<p>'. $bioghist[0]. "</p>\n";
-      }
-      $names = $r->getFields('(1|6|7)(0|1)0', true);
-      if (!empty($names)) {
-        $out .= "<p><strong>Names:</strong></p>\n<ul>\n";
-        foreach ($names as $name) {
-          $out .= "<li>". $name->formatField() ."</li>\n";
-        }
-        $out .= "</ul>\n";
-      }
-      $places = $r->getFields('651');
-      if (!empty($places)) {
-        $out .= "<p><strong>Places:</strong></p>\n<ul>\n";
-        foreach ($places as $place) {
-          $out .= "<li>". $place->formatField() ."</li>\n";
-        }
-        $out .= "</ul>\n";
-      }
-      $subjects = $r->getFields('6(5|3)0', true);
-      if (!empty($subjects)) {
-        $out .= "<p><strong>Subjects:</strong></p>\n<ul>\n";
-        foreach ($subjects as $subject) {
-          $out .= "<li>". $subject->formatField() ."</li>\n";
-        }
-        $out .= "</ul>\n";
-      }
-      $types = $r->getFields('655');
-      if (!empty($types)) {
-        $out .= "<p><strong>Types of material:</strong></p>\n<ul>\n";
-        foreach ($types as $type) {
-          $out .= "<li>". $type->formatField() ."</li>\n";
-        }
-        $out .= "</ul>\n";
-      }
-      $url = $r->getField('555');
-      if (!empty($url)) {
-        $out .= '<p><a href="'. $url->getSubfield('u') .'">View Finding Aid</a></p>';
-      }
-      return $out; 
-    }
-    
     function parse_marcxml($file) {
-      global $wpdb;
-      
       $this->records = new File_MARCXML($file);
       while ($r = $this->records->next()) {
-        $post = array();
-        $post['post_title'] = field_get_first($r, '245'); // gets everything, not $a$f
-        $post['post_date'] = date('Y-m-d H:M:S');
-        $post['post_date_gmt'] = gmdate('Y-m-d H:M:S');
-        $post['comment_status'] = 'closed';
-        $post['ping_status'] = 'open';
-        $post['post_status'] = 'publish';
-        $post['post_parent'] = '0';
-        $post['menu_order'] = '0';
-        $post['post_type'] = 'post';
-        $post['post_author'] = '1';
-        $post['post_content'] = $wpdb->escape($this->make_content($r));
+        $parser = new MARCXML_Parser($r);
+        $post = $parser->get_postdata();
         $post_id = wp_insert_post($post);
         wp_set_post_categories($post_id, 1);
       }
-    }
-    
-    function import() {
-      print_r($this);
-      print_r($_GET);
     }
     
     function dispatch() {
