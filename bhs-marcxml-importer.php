@@ -37,6 +37,7 @@ if ( class_exists( 'WP_Importer' ) ) {
     
     var $file;
     var $id;
+    var $count = 0;
     
     function header() {
       echo '<div class="wrap">';
@@ -90,7 +91,18 @@ if ( class_exists( 'WP_Importer' ) ) {
         $post = $parser->get_postdata();
         $post_id = wp_insert_post($post);
         wp_set_post_categories($post_id, 1);
+        ++ $this->count;
       }
+    }
+    
+    function done() {
+      $this->file = get_attached_file($this->id);
+      if ($this->file) {
+        wp_import_cleanup($this->id);
+      }
+      echo '<div class="narrow">';
+      echo '<h3 id="complete">'.__('Processing complete.').'</h3>';
+      echo '<p>'. $this->count .' '. __('records imported.') .'</p>';
     }
     
     function dispatch() {
@@ -114,7 +126,7 @@ if ( class_exists( 'WP_Importer' ) ) {
   				$file = get_attached_file( $this->id );
   				set_time_limit(0);
   				$this->parse_marcxml( $file );
-  				
+  				$this->done();
   				break;
   		}
   		$this->footer();

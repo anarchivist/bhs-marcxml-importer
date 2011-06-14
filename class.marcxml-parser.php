@@ -8,7 +8,7 @@ require_once('File/MARCXML.php');
 
 define('SUBDIV', 'vxyz');
 define('SUBJECTSF', 'avxyz');
-define('SUBFIELD_VALUES', 'abcdefghijklmnopqrstuvwxyz01234567890');
+define('SUBFIELD_VALUES', 'abcdefghijklmnopqrstuvwxyz0123456789');
 
 
 /**
@@ -97,21 +97,23 @@ class MARCXML_Parser {
    * @return string
    */
   function join_field($field = NULL, $joiner = ' ', $subfields = 'abcdefghijklmnopqrstuvwxyz0123456789') {
-    $subfields = str_split($subfields);
+    $sarr = str_split($subfields);
     if ($field->isControlfield()) {
       return $field->getData();
     } else {
       $out = '';
       foreach ($field->getSubfields() as $sf) {
-        if (in_array($sf->getCode(), $subfields)) {
-          if (substr($field->getTag(), 0, 1) == '6' and (in_array($sf->getCode(), array('v','x','y','z')))) {
-            $out .= (empty($out)) ? $sf->getData() : ' -- ' . $s->getData();
+        $code = $sf->getCode();
+        echo $code;
+        if (in_array($code, $sarr)) {
+          if (substr($field->getTag(), 0, 1) == '6' and (in_array($code, array('v','x','y','z')))) {
+            $out .= (empty($out)) ? $sf->getData() : ' -- ' . $sf->getData();
           } else {
-            $out .= (empty($out)) ? $sf->getData() : $joiner . $s->getData();
+            $out .= (empty($out)) ? $sf->getData() : $joiner . $sf->getData();
           }
         }
-      return preg_replace('/\s[|].\s/', ' -- ', $out);
       }
+      return preg_replace('/\s[|].\s/', ' -- ', $out);
     }
   }
   // }}}
@@ -353,8 +355,3 @@ class MARCXML_Parser {
   // }}}
 }
 ?>
-
-
-
-
-
