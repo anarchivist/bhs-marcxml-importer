@@ -337,7 +337,7 @@ class MARCXML_Parser {
    *
    * @return array
    */
-  function get_postdata($post_status = 'published',
+  function get_postdata($post_status = 'publish',
                         $post_type = 'post',
                         $post_author = '1',
                         $comment_status = 'closed',
