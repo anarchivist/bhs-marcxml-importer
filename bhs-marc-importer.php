@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: BHS MARC Importer
+Plugin Name: BHS MARCXML Importer
 Plugin URI: 
 Description: Imports data from MARCXML records and generates WordPress posts.
 Author: Mark A. Matienzo
@@ -117,10 +117,10 @@ if ( class_exists( 'WP_Importer' ) ) {
   		}
   		$this->file = $file['file'];
   		$this->id = (int) $file['id'];
-      // echo '<h3>'.__('Select Author').'</h2>';
-      // echo '<p>'.__('Please select the author to which the imported records will be attributed.').'</p>';
+      echo '<h3>'.__('Select Author').'</h2>';
+      echo '<p>'.__('Please select the author to which the imported records will be attributed.').'</p>';
       echo '<form action="?import=marcxml&amp;step=2&amp;id='. $this->id .'" method="post">';
-      // wp_dropdown_users(array('name' => 'author'));
+      wp_dropdown_users(array('name' => 'author'));
       wp_nonce_field('import-marcxml');
       echo '<input type="submit" name="submit" value="Select" />';
       echo '</form>';
@@ -139,7 +139,7 @@ if ( class_exists( 'WP_Importer' ) ) {
       }
       $names = $r->getFields('(1|6|7)(0|1)0', true);
       if (!empty($names)) {
-        $out .= "<p><strong>Names:</strong></p>\n";
+        $out .= "<p><strong>Names:</strong></p>\n<ul>\n";
         foreach ($names as $name) {
           $out .= "<li>". $name->formatField() ."</li>\n";
         }
@@ -234,10 +234,10 @@ if ( class_exists( 'WP_Importer' ) ) {
 
 // Instantiate and register the importer
 $marc_import = new MARCXML_Import();
-register_importer('marcxml', __('MARCXML', 'marc-importer'), __('Import MARCXML records as posts', 'bhs-marc-importer'), array ($marc_import, 'dispatch'));
+register_importer('marcxml', __('MARCXML', 'marc-importer'), __('Import MARCXML records as posts', 'bhs-marcxml-importer'), array ($marc_import, 'dispatch'));
 
 function marc_importer_init() {
-    load_plugin_textdomain( 'bhs-marc-importer', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+    load_plugin_textdomain( 'bhs-marcxml-importer', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
 add_action( 'init', 'marc_importer_init' );
 
