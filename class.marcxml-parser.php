@@ -155,7 +155,9 @@ class MARCXML_Parser {
    * Return an array of formatted scope and contents notes or abstracts
    * based on MARC 520 field data
    * 
-   * TODO: Force function to check value of field's first indicator
+   * TODO: Force function to check value of field's first indicator; pending
+   * resolution of Archivists' Toolkit issue ART-2503 or an AT export plugin
+   * that sets indicator accordingly.
    *
    * @return array
    */
