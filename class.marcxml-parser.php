@@ -104,7 +104,6 @@ class MARCXML_Parser {
       $out = '';
       foreach ($field->getSubfields() as $sf) {
         $code = $sf->getCode();
-        echo $code;
         if (in_array($code, $sarr)) {
           if (substr($field->getTag(), 0, 1) == '6' and (in_array($code, array('v','x','y','z')))) {
             $out .= (empty($out)) ? $sf->getData() : ' -- ' . $sf->getData();
