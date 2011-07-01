@@ -62,27 +62,6 @@ class MARCXML_Parser {
   }
   // }}}
   
-  // {{{ field_get_first()
-  /**
-    * Retrieve the first matching fields from a File_MARC_Record object,
-    * specified by tag, and return a formatted string.
-    *
-    * @param string $tag
-    *   MARC tag to retrieve
-    * @param bool $pcre
-    *   if true, then match as a regular expression
-    * @return string
-    */
-  function field_get_first($tag = NULL, $pcre = FALSE) {
-    $r = field_get($this->record, $tag, $pcre);
-    if (!empty($r)) {
-      return $r[0];
-    } else {
-      return "";
-    }
-  }
-  // }}}
-  
   // {{{ join_field()
   /**
    * Similar to File_MARC_Field::formatField, but allows you to specify which
@@ -247,6 +226,16 @@ class MARCXML_Parser {
   }  
   // }}}
   
+  // {{{ copies()
+  /**
+   * Return array of note fields specifying the existence of copies based
+   * on MARC 535 field data.
+   */
+  function copies() {
+    return $this->field_get('535');
+  }  
+  // }}}
+  
   // {{{ finding_aid()
   /**
    * Return string containing URL to hosted finding aid
@@ -291,12 +280,18 @@ class MARCXML_Parser {
       }
     }
     
-    // TODO: Add 535 (existence of copies) for material in PastPerfect. Follow
-    // up with MB/JM
+    $copies = $this->copies();
+    if ( !empty( $copies ) ) {
+      foreach ($copies as $copy) {
+        $out .= '<p>'. $copy . "</p>\n";
+      }
+    }
     
     $bioghist = $this->bioghist();
     if (!empty($bioghist) && (count($scope_or_abstract) < 2)) {
-      $out .= '<p>'. $bioghist ."</p>\n";
+      foreach ($bioghist as $bh) {
+        $out .= '<p>'. $bh ."</p>\n";
+      }
     }
     
     $names = $this->names();
