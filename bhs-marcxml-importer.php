@@ -5,7 +5,7 @@ Plugin URI:
 Description: Imports data from MARCXML records and generates WordPress posts.
 Author: Mark A. Matienzo
 Author URI: http://matienzo.org/
-Version: 0.1
+Version: 0.2
 Stable tag: 1.0
 License: GPL v2 - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 */
@@ -50,23 +50,16 @@ if ( class_exists( 'WP_Importer' ) ) {
     
     function greet() {
       echo '<div class="narrow">';
-      echo '<p>'.__('This imports MARCXML records into individual WordPress posts.').'</p>';
-      echo '<p>'.__('Upload your MARCXML file, and we will transform the records into posts.').'</p>';
-      wp_import_upload_form("admin.php?import=marcxml&amp;step=1");
+      echo '<p>'.__('This imports XML files containing MARCXML records into individual WordPress posts.').'</p>';
+      echo '<p>'.__('Upload your file containing MARCXML records, and we will transform the records into posts.').'</p>';
+      wp_import_upload_form("admin.php?import=". strtolower(get_class($this)) ."&amp;step=1");
       echo '</div>';
     }
-    
-    function wp_authors_form() {
-      echo '<h3>'.__('Select Author').'</h2>';
-      echo '<p>'.__('Please select the author to which the imported records will be attributed.').'</p>';
-      echo '<form action="?import=marcxml&amp;step=2" method="post">';
-      wp_dropdown_users(array('name' => 'author'));
-      wp_nonce_field('import-marcxml');
-      echo '<input type="submit" name="submit" value="Select" />';
-      echo '</form>';
-    }
-    
+
+    // TODO: Make this actually set stuff.
     function import_options() {
+      // FYI: Using wp_import_handle_upload() will automatically append
+      // '.txt' to the filename.
       $file = wp_import_handle_upload();
   		if ( isset($file['error']) ) {
   			echo '<p>'.__('Sorry, there has been an error.').'</p>';
@@ -77,14 +70,14 @@ if ( class_exists( 'WP_Importer' ) ) {
   		$this->id = (int) $file['id'];
       echo '<h3>'.__('Select Author').'</h2>';
       echo '<p>'.__('Please select the author to which the imported records will be attributed.').'</p>';
-      echo '<form action="?import=marcxml&amp;step=2&amp;id='. $this->id .'" method="post">';
+      echo '<form action="?import='. strtolower(get_class($this)) .'&amp;step=2&amp;id='. $this->id .'" method="post">';
       wp_dropdown_users(array('name' => 'author'));
       wp_nonce_field('import-marcxml');
       echo '<input type="submit" name="submit" value="Select" />';
       echo '</form>';
     }
     
-    function parse_marcxml($file) {
+    function parse_data($file) {
       $this->records = new File_MARCXML($file);
       while ($r = $this->records->next()) {
         $parser = new MARCXML_Parser($r);
@@ -125,18 +118,72 @@ if ( class_exists( 'WP_Importer' ) ) {
   				$this->id = (int) $_GET['id'];
   				$file = get_attached_file( $this->id );
   				set_time_limit(0);
-  				$this->parse_marcxml( $file );
+  				$this->parse_data( $file );
   				$this->done();
   				break;
   		}
   		$this->footer();
   	}
   }
+  
+  // This is subclassed because of the relatively minor changes needed.
+  class MARCXML_Zip_Import extends MARCXML_Import {
+
+    function header() {
+      echo '<div class="wrap">';
+      echo '<h2>'.__('Import MARCXML from Zip file').'</h2>';
+    }
+    
+    function greet() {
+      echo '<div class="narrow">';
+      echo '<p>'.__('This imports MARCXML records in a Zip file into individual WordPress posts.').'</p>';
+      echo '<p>'.__('Upload your Zip file containing MARCXML records, and we will transform the records into posts.').'</p>';
+      wp_import_upload_form("admin.php?import=". strtolower(get_class($this)) ."&amp;step=1");
+      echo '</div>';
+    }
+    
+    function parse_data($file) {
+      // Instantiate the WordPress file system.
+      global $wp_filesystem;
+      WP_Filesystem();
+      
+      // Specify the temporary directory. The WordPress unzip_file function
+      // will attempt to create this directory automatically if it doesn't
+      // exist; however, if the permissions won't allow it, it will fail.
+      $tempdir = $wp_filesystem->wp_content_dir() . 'marcxml-import/';
+      
+      // Attempt unzipping the uploaded file.
+      if( unzip_file( $file, $tempdir )) {
+			  
+			  // Get a listing of all the XML files in the tempdir.
+			  // TODO: handle zip files containing subdirectories.
+			  $xml_files = glob("$tempdir*.xml");
+			  
+			  // Repeat for each XML file.
+			  foreach ( $xml_files as $x ) {
+          $this->records = new File_MARCXML($x);
+          while ($r = $this->records->next()) {
+            $parser = new MARCXML_Parser($r);
+            $post = $parser->get_postdata();
+            $post_id = wp_insert_post($post);
+            wp_set_post_categories($post_id, 1);
+            ++ $this->count;
+          }
+          
+          // Delete the current XML file.
+          $wp_filesystem->delete($x);
+        }
+      }
+    }
+  }
 }
 
 // Instantiate and register the importer
-$marc_import = new MARCXML_Import();
-register_importer('marcxml', __('MARCXML', 'marc-importer'), __('Import MARCXML records as posts', 'bhs-marcxml-importer'), array ($marc_import, 'dispatch'));
+$marcxml_import = new MARCXML_Import();
+register_importer('marcxml_import', __('MARCXML', 'marcxml-importer'), __('Import MARCXML records as posts', 'bhs-marcxml-importer'), array ($marcxml_import, 'dispatch'));
+
+$marcxml_zip_import = new MARCXML_Zip_Import();
+register_importer('marcxml_zip_import', __('MARCXML from Zip file', 'marcxml-zip-importer'), __('Import MARCXML records in a Zip file as posts', 'bhs-marcxml-importer'), array ($marcxml_zip_import, 'dispatch'));
 
 function marc_importer_init() {
     load_plugin_textdomain( 'bhs-marcxml-importer', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
