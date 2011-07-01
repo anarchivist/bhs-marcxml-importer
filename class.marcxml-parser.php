@@ -190,7 +190,7 @@ class MARCXML_Parser {
       if (substr($name->getTag(), 1,2) == '00') {
         $out[] = $this->join_field($name, ', ', 'ade'.SUBDIV);
       } else {
-        $out[] = $this->join_field($name, '. ', 'abe'.SUBDIV);
+        $out[] = $this->join_field($name, '. ', 'abegn'.SUBDIV);
       }
     }
     return $out;
@@ -254,7 +254,7 @@ class MARCXML_Parser {
   function finding_aid() {
     $link = $this->record->getField('555');
     if (!empty($link)) {
-      return $link->getSubfield('u');
+      return $link->getSubfield('u')->getData();
     } else {
       return '';
     }
@@ -276,10 +276,21 @@ class MARCXML_Parser {
     $extent = $this->extent();
     $out .= (!empty($extent)) ? "<p><strong>Extent: ". $extent ."</strong></p>\n" : "";
     
+    // TODO: Select the shortest 520 field. What follows is a horrid 
+    // workaround. Eventually we should be able to handle this if AT devs
+    // implement ART-2503 to differentiate abstracts and scopecontents in
+    // MARCXML exports.
     $scope_or_abstract = $this->scope_or_abstract();
     if (!empty($scope_or_abstract)) {
-      $out .= '<p>'. $scope_or_abstract[0] ."</p>\n";
+      if (count($scope_or_abstract) > 1) {
+        $out .= '<p>'. $scope_or_abstract[1] ."</p>\n";
+      } else {
+        $out .= '<p>'. $scope_or_abstract[0] ."</p>\n"; 
+      }
     }
+    
+    // TODO: Add 535 (existence of copies) for material in PastPerfect. Follow
+    // up with MB/JM
     
     $bioghist = $this->bioghist();
     if (!empty($bioghist) && (count($scope_or_abstract) < 2)) {
