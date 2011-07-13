@@ -77,7 +77,7 @@ if ( class_exists( 'WP_Importer' ) ) {
       echo '</form>';
     }
     
-    function parse_data($file) {
+    function parse_xml($file) {
       $this->records = new File_MARCXML($file);
       while ($r = $this->records->next()) {
         $parser = new MARCXML_Parser($r);
@@ -86,6 +86,10 @@ if ( class_exists( 'WP_Importer' ) ) {
         wp_set_post_categories($post_id, 1);
         ++ $this->count;
       }
+    }
+    
+    function parse_data($file) {
+      $this->parse_xml($file);
     }
     
     function done() {
@@ -142,6 +146,30 @@ if ( class_exists( 'WP_Importer' ) ) {
       echo '</div>';
     }
     
+    function parse_directory($dir) {
+      // Instantiate the WordPress file system.
+      global $wp_filesystem;
+      WP_Filesystem();
+      
+      // Get a listing of the files in directory $dir.
+      $filelist = array_keys ($wp_filesystem->dirlist($dir));
+      
+      // Iterate over file listing.
+      foreach ($filelist as $file) {
+        $file = trailingslashit($dir) . $file;
+        
+        // If current file is a directory, then run this function over it.
+        if ( $wp_filesystem->is_dir($file) ) {
+          $this->parse_directory($file);
+        // Otherwise, check if extension of file is 'xml'; if so, parse file.
+        } elseif ( strtolower(pathinfo($file, PATHINFO_EXTENSION)) == 'xml') {
+          $this->parse_xml($file);
+        }
+        // Delete the current file/directory.
+        $wp_filesystem->delete($file);
+      }
+    }
+    
     function parse_data($file) {
       // Instantiate the WordPress file system.
       global $wp_filesystem;
@@ -154,27 +182,10 @@ if ( class_exists( 'WP_Importer' ) ) {
       
       // Attempt unzipping the uploaded file.
       if( unzip_file( $file, $tempdir )) {
-			  
-			  // Get a listing of all the XML files in the tempdir.
-			  // TODO: handle zip files containing subdirectories.
-			  $xml_files = glob("$tempdir*.xml");
-			  
-			  // Repeat for each XML file.
-			  foreach ( $xml_files as $x ) {
-          $this->records = new File_MARCXML($x);
-          while ($r = $this->records->next()) {
-            $parser = new MARCXML_Parser($r);
-            $post = $parser->get_postdata();
-            $post_id = wp_insert_post($post);
-            wp_set_post_categories($post_id, 1);
-            ++ $this->count;
-          }
-          
-          // Delete the current XML file.
-          $wp_filesystem->delete($x);
-        }
-      }
+        $this->parse_directory($tempdir);
+		  }
     }
+    
   }
 }
 
