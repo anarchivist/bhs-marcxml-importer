@@ -361,18 +361,21 @@ class MARCXML_Parser {
    *
    * @return array
    */
-  function get_postdata($post_status = 'publish',
-                        $post_type = 'post',
-                        $post_author = '1',
-                        $comment_status = 'closed',
-                        $ping_status = 'open',      
-                        $post_parent = '0',
-                        $menu_order = '0',
-                        $post_category =  array(1)) {
+  function get_postdata($options = array(
+    'post_status' => 'publish',
+    'post_type' => 'post',
+    'post_author' => '1',
+    'comment_status' => 'closed',
+    'ping_status' => 'open',      
+    'post_parent' => '0',
+    'menu_order' => '0',
+    'post_category' => '1')
+    ){
     global $wpdb;
+    $options['post_category'] = array($options['post_category']);
     $post_title = $this->title();
     $post_content = $this->content();
-    return compact( array ('post_title', 'post_content', 'post_status', 'post_type', 'post_author', 'comment_status', 'ping_status', 'post_parent', 'menu_order', 'post_category') );
+    return array_merge( $options, compact( array( 'post_title', 'post_content' ) ) );
   }
   // }}}
 }

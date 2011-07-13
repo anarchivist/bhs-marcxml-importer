@@ -5,7 +5,7 @@ Plugin URI:
 Description: Imports data from MARCXML records and generates WordPress posts.
 Author: Mark A. Matienzo
 Author URI: http://matienzo.org/
-Version: 0.2.1
+Version: 0.4
 Stable tag: 1.0
 License: GPL v2 - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 */
@@ -38,6 +38,7 @@ if ( class_exists( 'WP_Importer' ) ) {
     var $file;
     var $id;
     var $count = 0;
+    var $post_options = array();
     
     function header() {
       echo '<div class="wrap">';
@@ -56,7 +57,6 @@ if ( class_exists( 'WP_Importer' ) ) {
       echo '</div>';
     }
 
-    // TODO: Make this actually set stuff.
     function import_options() {
       // FYI: Using wp_import_handle_upload() will automatically append
       // '.txt' to the filename.
@@ -68,20 +68,52 @@ if ( class_exists( 'WP_Importer' ) ) {
   		}
   		$this->file = $file['file'];
   		$this->id = (int) $file['id'];
-      echo '<h3>'.__('Select Author').'</h2>';
-      echo '<p>'.__('Please select the author to which the imported records will be attributed.').'</p>';
+      echo '<h3>'.__('Select Import options').'</h3>';
       echo '<form action="?import='. strtolower(get_class($this)) .'&amp;step=2&amp;id='. $this->id .'" method="post">';
-      wp_dropdown_users(array('name' => 'author'));
-      wp_nonce_field('import-marcxml');
-      echo '<input type="submit" name="submit" value="Select" />';
-      echo '</form>';
+      wp_nonce_field('import-marcxml'); ?>
+      <p class="clear"><strong><?php _e("These options will be set on all posts imported in this batch."); ?></strong></p>
+      <p class="clear"><label><?php _e("Author to which imported records will be attributed: ");
+        wp_dropdown_users(array('name' => 'post_author')); ?>
+        </label>
+      </p>
+      <p class="clear"><label><?php _e("Set publication status to: "); ?>
+        <select name="post_status" id="post_status">
+        	<option value="publish"><?php _e("publish"); ?></option>
+          <option value="draft"><?php _e("draft"); ?></option>
+          <option value="private"><?php _e("private"); ?></option>
+          <option value="pending"><?php _e("pending"); ?></option>
+        </select>
+        </label>
+      </p>
+      <p class="clear"><label><?php _e("Set comment status to: "); ?>
+        <select name="comment_status" id="comment_status">
+        	<option value="closed" selected="selected"><?php _e("closed"); ?></option>
+          <option value="open"><?php _e("open"); ?></option>
+        </select>
+        </label>
+      </p>
+      <p class="clear"><label><?php _e("Set ping status to: "); ?>
+        <select name="ping_status" id="ping_status">
+        	<option value="closed"><?php _e("closed"); ?></option>
+          <option value="open" selected="selected"><?php _e("open"); ?></option>
+        </select>
+        </label>
+      </p>
+      <p class="clear"><label><?php _e("Categories: ");
+      wp_dropdown_categories('name=post_category');
+      ?>
+        </label>
+      </p>
+      <input type="submit" name="submit" value="Select" />
+      </form><?php
     }
     
     function parse_xml($file) {
       $this->records = new File_MARCXML($file);
+      $options = $this->post_options;
       while ($r = $this->records->next()) {
         $parser = new MARCXML_Parser($r);
-        $post = $parser->get_postdata();
+        $post = $parser->get_postdata($options);
         $post_id = wp_insert_post($post);
         wp_set_post_categories($post_id, 1);
         ++ $this->count;
@@ -119,9 +151,11 @@ if ( class_exists( 'WP_Importer' ) ) {
   				break;
   			case 2:
   				check_admin_referer('import-marcxml');
+  				unset($_POST['_wpnonce'], $_POST['_wp_http_referer']);
   				$this->id = (int) $_GET['id'];
   				$file = get_attached_file( $this->id );
   				set_time_limit(0);
+  				$this->post_options = $_POST;
   				$this->parse_data( $file );
   				$this->done();
   				break;
