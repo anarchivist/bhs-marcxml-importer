@@ -12,6 +12,20 @@ define('SUBFIELD_VALUES', 'abcdefghijklmnopqrstuvwxyz0123456789');
 
 
 /**
+ * Compares length of two strings.
+ * 
+ * @var $a string
+ *   first string to compare
+ * @var $b string
+ *   second string to compare
+ * @return int
+ *   difference in length between first and second string
+ */
+function length_cmp ( $a, $b ){
+  return strlen( $a ) - strlen( $b );
+}
+
+/**
 * 
 */
 class MARCXML_Parser {
@@ -134,7 +148,7 @@ class MARCXML_Parser {
    * Return an array of formatted scope and contents notes or abstracts
    * based on MARC 520 field data
    * 
-   * TODO: Force function to check value of field's first indicator; pending
+   * TODO: Force function to check value of field's first indicator pending
    * resolution of Archivists' Toolkit issue ART-2503 or an AT export plugin
    * that sets indicator accordingly.
    *
@@ -267,17 +281,18 @@ class MARCXML_Parser {
     $extent = $this->extent();
     $out .= (!empty($extent)) ? "<p><strong>Extent: ". $extent ."</strong></p>\n" : "";
     
-    // TODO: Select the shortest 520 field. What follows is a horrid 
-    // workaround. Eventually we should be able to handle this if AT devs
+    // What follows is a horrid workaround; it selects the shortest 520
+    // field by doing a comparison of the length of all of the formatted
+    // fields. Eventually we should be able to handle this properly if AT devs
     // implement ART-2503 to differentiate abstracts and scopecontents in
     // MARCXML exports.
+    //
+    // The previous workaround selected the second 520 field if there were
+    // more than one, otherwise, it only selected the first.
     $scope_or_abstract = $this->scope_or_abstract();
-    if (!empty($scope_or_abstract)) {
-      if (count($scope_or_abstract) > 1) {
-        $out .= '<p>'. $scope_or_abstract[1] ."</p>\n";
-      } else {
-        $out .= '<p>'. $scope_or_abstract[0] ."</p>\n"; 
-      }
+    usort( $scope_or_abstract, "length_cmp" );
+    if ( !empty( $scope_or_abstract ) ) {
+      $out .= '<p>'. $scope_or_abstract[0] ."</p>\n"; 
     }
     
     $copies = $this->copies();
