@@ -183,12 +183,12 @@ class MARCXML_Parser {
     $out = array();
     foreach ($names as $name) {
       if (substr($name->getTag(), 1,2) == '00') {
-        $out[] = $this->join_field($name, ', ', 'ade'.SUBDIV);
+        $out[] = $this->join_field($name, ', ', 'ad'.SUBDIV);
       } else {
-        $out[] = $this->join_field($name, '. ', 'abegn'.SUBDIV);
+        $out[] = $this->join_field($name, '. ', 'abgn'.SUBDIV);
       }
     }
-    return $out;
+    return array_unique($out);
   }  
   // }}}
   
