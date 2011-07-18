@@ -3,7 +3,7 @@ Contributors: anarchivist
 Tags: import, libraries, marc, marcxml, metadata
 Requires at least: 3.0
 Tested up to: 3.2
-Stable tag: 0.5
+Stable tag: 0.5.1
 
 Imports data from MARCXML records and generates WordPress posts.
 
@@ -24,6 +24,9 @@ This plugin requires the [File_MARC PEAR module.](http://pear.php.net/package/Fi
 3. Second uploader
 
 == Changelog ==
+
+= 0.5.1 =
+* First stable public release.
 
 = 0.5 =
 * Dedupe names.
