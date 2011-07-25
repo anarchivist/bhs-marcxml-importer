@@ -1,9 +1,10 @@
 === BHS MARCXML Importer ===
 Contributors: anarchivist
+Donate link: http://www.brooklynhistory.org/support/fund.html
 Tags: import, libraries, marc, marcxml, metadata
 Requires at least: 3.0
-Tested up to: 3.2
-Stable tag: 0.5.1
+Tested up to: 3.2.1
+Stable tag: 0.6
 
 Imports data from MARCXML records and generates WordPress posts.
 
@@ -19,11 +20,13 @@ This plugin requires the [File_MARC PEAR module.](http://pear.php.net/package/Fi
 
 == Screenshots ==
 
-1. Original uploader (good if you don't want to attach images to another post)
-2. Zip uploader media button
-3. Second uploader
+1. Initial screen when uploading a Zip file containing a MARCXML records
+2. Import options screen
 
 == Changelog ==
+
+= 0.6 =
+* Fixes bug relating to category not being set upon import.
 
 = 0.5.1 =
 * First stable public release.
@@ -37,7 +40,18 @@ This plugin requires the [File_MARC PEAR module.](http://pear.php.net/package/Fi
 * Added handling to set post metadata options at import time.
 
 = 0.2.1 = 
-* Added increased field extraction.
+* Added more fields covered by extraction code.
 
 = 0.2 =
 * Initial public release, including ability to extract Zip files.
+
+== Upgrade Notice ==
+
+= None =
+* No upgrade notices.
+
+== Frequently Asked Questions ==
+
+= I'm seeing errors that contain "Failed opening required 'File/MARCXML.php'". =
+
+You haven't installed the  [File_MARC PEAR module.](http://pear.php.net/package/File_MARC/) Please install this module before installing the plugin.
