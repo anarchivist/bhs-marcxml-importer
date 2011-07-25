@@ -100,7 +100,7 @@ if ( class_exists( 'WP_Importer' ) ) {
         </label>
       </p>
       <p class="clear"><label><?php _e("Categories: ");
-      wp_dropdown_categories('name=post_category');
+      wp_dropdown_categories( array( 'name' => 'post_category', 'hide_empty' => false ) );
       ?>
         </label>
       </p>
@@ -115,7 +115,6 @@ if ( class_exists( 'WP_Importer' ) ) {
         $parser = new MARCXML_Parser($r);
         $post = $parser->get_postdata($options);
         $post_id = wp_insert_post($post);
-        wp_set_post_categories($post_id, 1);
         ++ $this->count;
       }
     }
