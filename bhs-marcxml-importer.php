@@ -1,12 +1,12 @@
 <?php
 /*
 Plugin Name: BHS MARCXML Importer
-Plugin URI: 
+Plugin URI: http://wordpress.org/extend/plugins/bhs-marcxml-importer
 Description: Imports data from MARCXML records and generates WordPress posts.
 Author: Mark A. Matienzo
 Author URI: http://matienzo.org/
-Version: 0.5.1
-Stable tag: 1.0
+Version: 0.6
+Stable tag: 0.6
 License: GPL v2 - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 */
 
